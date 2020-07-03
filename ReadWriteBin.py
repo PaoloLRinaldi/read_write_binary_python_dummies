@@ -114,7 +114,7 @@ class Bin:
         self.jump_to(point)
         self.write(type_str, val)
         
-    def write_namy_at(self, point, vals, type_str = "unsigned char"):
+    def write_many_at(self, point, vals, type_str = "unsigned char"):
         self.jump_to(point)
         self.write_many(type_str, vals)
 
