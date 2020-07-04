@@ -10,7 +10,7 @@ from ReadWriteBin import Bin
 binfile = Bin("myfile.bin", truncate=False, little_endian=True)
 
 binfile.write_many((0, 2, 5, 9), "int")
-binfile.move_by(-2, "int")
+binfile.move_by(-3, "int")
 
 values = binfile.get_values(3, "int")
 
