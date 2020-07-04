@@ -5,7 +5,7 @@ It allows to manage binary files in a higl-level way.
 
 # Usage
 ```python
-from ReadWriteBin import Bin
+from readwritebin import Bin
 
 binfile = Bin("myfile.bin", truncate=False, little_endian=True)
 
