@@ -1,10 +1,11 @@
-# SCRIVERE SOLO CARATTERI NEL RANGE
-# ASCII CLASSICO [0, 127], QUINDI
-# NIENTE LETTERE ACCENTATE O
-# CARATTERI STRANI
 from struct import pack, unpack
 
+
 def dtype_str_to_char(type_name):
+    '''
+    Convert the name of the type to a character code
+    to be interpreted by the "struct" library.
+    '''
     if not (type(type_name) is str):
         raise TypeError("You must insert a string.")
     if type_name == 'unsigned char':
@@ -45,6 +46,9 @@ def dtype_str_to_char(type_name):
         raise ValueError("Unknown type name: " + type_name)
  
 def type_size(type_name):
+    '''
+    Get the size of a type in bytes.
+    '''
     if not (type(type_name) is str):
         raise TypeError("You must insert a string.")
     if type_name == 'unsigned char':
@@ -80,10 +84,15 @@ def type_size(type_name):
 
 
 class Bin:
+    '''
+    The class that manages a binary file.
+    '''
     def __init__(self, filename, truncate = False, little_endian = True):
         try:
+            # Does the file already exist?
             self._f = open(filename, "r+" + "b")
         except:
+            # If it doesn't exist craete it.
             self._f = open(filename, "wb")
             self._f.close()
             self._f = open(filename, "r+" + "b")
@@ -92,59 +101,121 @@ class Bin:
         if truncate:
             self._f.truncate(0)
 
-    # Vecchia versione. La tolgo per simmetria con le funzioni di lettura.
-    # Voglio che il tipo (type_str) vada specificato alla fine perché
-    # voglio che di default sia unsigned char. Non cancellare questa
-    # vecchia versione
-    # def write(self, type_str, *vals):
-    #     self._f.write(pack(self._endian_char + dtype_str_to_char(type_str) * len(vals), *vals))
-    
     def write(self, val, type_str = "unsigned char"):
+        '''
+        Write a value in the current position.
+        param: val
+            The value you want to write
+        param: type_str
+            The type of the value        
+        '''
         self._f.write(pack(self._endian_char + dtype_str_to_char(type_str), val))
         
     def write_many(self, vals, type_str = "unsigned char"):
+        '''
+        Write multiple values in the current position.
+        param: vals
+            The container containing the values you want to write.
+            E.g.: bin_instance.write_many((6, 8, -1), "int")
+        param: type_str
+            The type of the values        
+        '''
         self._f.write(pack(self._endian_char + dtype_str_to_char(type_str) * len(vals), *vals))
 
-    # Vecchia versione. Non cancellare
-    # def write_at(self, point, type_str, *val):
-    #     self.jump_to(point)
-    #     self.write(type_str, *val)
-
     def write_at(self, point, val, type_str = "unsigned char"):
+        '''
+        Write a value in the specified position.
+        param: point
+            The point where to write. It must be espressed in bytes.
+        param: val
+            The value you want to write
+        param: type_str
+            The type of the value        
+        '''
         self.jump_to(point)
         self.write(type_str, val)
         
     def write_many_at(self, point, vals, type_str = "unsigned char"):
+        '''
+        Write multiple values in the current position.
+        param: point
+            The point where to write. It must be espressed in bytes.
+        param: vals
+            The container containing the values you want to write.
+            E.g.: bin_instance.write_many((6, 8, -1), "int")
+        param: type_str
+            The type of the values        
+        '''
         self.jump_to(point)
         self.write_many(type_str, vals)
 
     def write_string(self, s):
-        #self._f.write(pack(self._endian_char + "c" * len(s), *tuple(a for a in s)))
+        '''
+        Write a string in the current position.
+        param: s
+            The string you want to write
+        '''
         self._f.write(s.encode("ascii"))
         
     def write_string_at(self, point, s):
+        '''
+        Write a string in the current position.
+        param: point
+            The point where to write. It must be espressed in bytes.
+        param: s
+            The string you want to write
+        '''
         self.jump_to(point)
         self.write_string(s)
 
-    # Prima "get_value" (e tutti gli altri getters) avevano type_str come
-    # penultimo argomento. Lo ho messo per ultimo di modo da evere
-    # unsigned char come argomento di default. Di conseguenza ho modificato
-    # anche tutti gli "write"
     def get_value(self, type_str = "unsigned char"):
+        '''
+        Get the value in the current position.
+        param: type_str
+            The type of the value
+        '''
         return unpack(self._endian_char + dtype_str_to_char(type_str), self._f.read(type_size(type_str)))[0]
 
     def get_values(self, num, type_str = "unsigned char"):
+        '''
+        Get multiple values starting from the current position.
+        param: num
+            The number of values you want to read
+        param: type_str
+            The type of the value
+        '''
         return unpack(self._endian_char + dtype_str_to_char(type_str) * num, self._f.read(num * type_size(type_str)))
 
     def get_value_at(self, point, type_str = "unsigned char"):
+        '''
+        Get the value in the specified position.
+        param: point
+            The point from where to read. It must be expressed in bytes.
+        param: type_str
+            The type of the value
+        '''
         self.jump_to(point)
         return self.get_value(type_str)
 
     def get_values_at(self, point, num, type_str = "unsigned char"):
+        '''
+        Get multiple values starting from the specified position.
+        param: point
+            The point from where to read. It must be expressed in bytes.
+        param: num
+            The number of values you want to read
+        param: type_str
+            The type of the value
+        '''
         self.jump_to(point)
         return self.get_values(num, type_str)
 
     def get_string(self, sz):
+        '''
+        Read a string from the current position.
+        param: sz
+            The size of the string
+        '''
         ret = str()
         s = unpack(self._endian_char + "c" * sz, self._f.read(sz))
         for a in s:
@@ -152,19 +223,50 @@ class Bin:
         return ret
         
     def get_string_at(self, point, sz):
+        '''
+        Read a string from the specified position.
+        param: point
+            The point from where to read. It must be expressed in bytes.
+        param: sz
+            The size of the string
+        '''
         self.jump_to(point)
         return self.get_string(sz)
 
     def jump_to(self, point):
+        '''
+        Move the current position.
+        param: point
+            The point where to move. It must be expressed in bytes.
+        '''
         self._f.seek(point)
 
     def pos(self):
+        '''
+        Get the position you are currently on. It is expressed in bytes.
+        '''
         return self._f.tell()
         
     def move_by(self, size, type_str = "char"):
+        '''
+        Move from your current position by a certain quantity.
+        E.g: You have just written 3 integers and you want to move back
+             to the first one:
+             bin_instance.move_by(-3, "int")
+             or
+             bin_instance.move_by(-12)
+             since the size of "int" is 4 bytes.
+        param: size
+            The number of steps
+        param: type_str
+            The type to deduce the size of the step
+        '''
         self.jump_to(self.pos() + size * type_size(type_str))
     
     def size(self):
+        '''
+        Get the size of the file in bytes
+        '''
         p = self.pos()
         self._f.seek(0, 2)
         ret = self.pos()
@@ -172,7 +274,13 @@ class Bin:
         return ret
         
     def flush(self):
+        '''
+        Flush the buffer
+        '''
         self._f.flush()
         
     def close(self):
+        '''
+        Close the file
+        '''
         self._f.close()
