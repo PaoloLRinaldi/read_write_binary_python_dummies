@@ -98,6 +98,7 @@ class Bin:
             self._f = open(filename, "r+" + "b")
         self._f.seek(0)
         self._endian_char = "<" if little_endian else ">"
+        self._filename = filename
         if truncate:
             self._f.truncate(0)
 
